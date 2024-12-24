@@ -1,35 +1,43 @@
+import 'package:ecommerce_app_ui/components/costum_navigation_bar.dart';
+import 'package:ecommerce_app_ui/routes.dart';
+import 'package:ecommerce_app_ui/screens/splash/splash_screen.dart';
+import 'package:ecommerce_app_ui/state_managements/auth_provider.dart';
+import 'package:ecommerce_app_ui/state_managements/cart_provider.dart';
+import 'package:ecommerce_app_ui/state_managements/favorite_provider.dart';
+import 'package:ecommerce_app_ui/state_managements/theme_provider.dart';
+import 'package:ecommerce_app_ui/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'SplashScreen.dart';
-
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isLoggedIn = prefs.getBool("isLoggedIn") ?? false;
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (context) => AuthProvider()),
+    ChangeNotifierProvider(create: (context) => ThemeProvider()),
+    ChangeNotifierProvider(create: (context) => CartProvider()),
+    ChangeNotifierProvider(create: (context) => FavoriteProvider()),
+  ], child: MainApp(isLoggedIn: isLoggedIn)));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MainApp extends StatelessWidget {
+  const MainApp({super.key, required this.isLoggedIn});
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SplashScreen(),);
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+  final bool isLoggedIn;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold();
+    return Consumer<ThemeProvider>(
+      builder: (context, theme, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          initialRoute: isLoggedIn ? CustomNavigationBar.routeName : SplashScreen.routeName,
+          theme: themeData(theme.isDarkMode),
+          routes: routes,
+        );
+      },
+    );
   }
 }
